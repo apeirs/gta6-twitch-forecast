@@ -34,7 +34,9 @@ H = 3600
 
 FALLBACK_SIGMA = 0.15  # the baseline's log spread per sqrt(hour), used only when the model path fails
 BANDWIDTH = 1.0        # kernel bandwidth, in units of each feature's spread across the comparables
-SPREAD_FLOOR = 0.05    # smallest log spread the model may write for any hour
+SPREAD_FLOOR = 0.05   # smallest log spread the model may write for any hour
+SPREAD_SCALE = 0.75    # the kernel mixes neighbours that differ in kind; their raw weighted spread runs ~1.3x too
+                       # wide for launches with an audience at hour 1 (leave-one-out 90% coverage 0.96 -> 0.90)
 MIN_TRUTH_HOURS = 12   # a comparable needs at least this many of hours 2..24 to be a training curve
 
 
@@ -178,7 +180,7 @@ def model_fan(case: dict, series: dict[int, float], day: int, p1: float) -> list
             return None
         m = sum(w * r for w, r in pairs) / sw
         var = sum(w * (r - m) ** 2 for w, r in pairs) / sw
-        fan.append((m, max(math.sqrt(var), SPREAD_FLOOR)))
+        fan.append((m, max(SPREAD_SCALE * math.sqrt(var), SPREAD_FLOOR)))
     return fan
 
 
