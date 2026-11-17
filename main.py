@@ -7,7 +7,9 @@ For hours 2..24 of the release day (UTC) the forecast is a log-normal fan around
 where m_h and s_h are the weighted mean and spread of log(count_h / count_hour1) over the case's comparables (past
 launches' release days). Each comparable is weighted by a Gaussian kernel on how much its pre-release shape at hour 1
 looks like this case's: hour 1 over the hour before, over the median of the day before, over the max of the last six
-hours, and the size of hour 1. Anything that goes wrong falls back to the house baseline's widening fan around p1.
+hours, the size of hour 1, and whether it launched on PC. The spread gets a small-sample correction for the kernel's
+effective number of comparables and one calibration scale. Anything that goes wrong falls back to the house
+baseline's widening fan around p1.
 
 Deterministic (no randomness, no clock, inputs read in name order) and fast (a few ms a case).
 
