@@ -115,6 +115,12 @@ def features(series: dict[int, float], day: int, p1: float) -> list[float | None
     ]
 
 
+def has_pc(platforms) -> float:
+    """1 when a launch was on PC too. PC launches often unlock at one global time, so their release-day curve has
+    another shape than a console launch rolling through the time zones."""
+    return 1.0 if "PC" in str(platforms or "") else 0.0
+
+
 def training_curves(case: dict, day: int) -> list[tuple[list, dict[int, float]]]:
     """Each usable comparable's (features, {h: log(count_h / count_hour1)})."""
     game = case.get("game") if isinstance(case.get("game"), dict) else {}
@@ -138,7 +144,7 @@ def training_curves(case: dict, day: int) -> list[tuple[list, dict[int, float]]]
                 ratios[h] = math.log(max(v, 1.0)) - lp1
         if len(ratios) < MIN_TRUTH_HOURS:  # e.g. the GTA VI category's own pre-release history
             continue
-        out.append((features(series, cday, p1), ratios))
+        out.append((features(series, cday, p1) + [has_pc(comp.get("platforms"))], ratios))
     return out
 
 
@@ -147,7 +153,9 @@ def model_fan(case: dict, series: dict[int, float], day: int, p1: float) -> list
     train = training_curves(case, day)
     if len(train) < 3:
         return None
-    x = features(series, day, p1)
+    # Every case of this contest is a console launch (GTA VI: PS5 and Xbox Series): PC only if the case says so.
+    game = case.get("game") if isinstance(case.get("game"), dict) else {}
+    x = features(series, day, p1) + [has_pc(game.get("platforms"))]
     nf = len(x)
     scales = []
     for k in range(nf):
